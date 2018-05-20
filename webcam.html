@@ -32,10 +32,11 @@
 
 			var camera, scene, renderer, video;
 			var videoWidth = 800, videoHeight = 600;
+			var faceBoxs = new Array();
 
 			init();
 			animate();
-			var faceBoxs = new Array();
+			
 
 			function init() {
 
@@ -144,7 +145,7 @@
 			 	while(json.length) {
 			 		let data = json.pop();
 			 		var left = data.box.left * 2 - videoWidth/2
-			 		var right = data.box.left * 2 - videoWidth/2
+			 		var right = data.box.right * 2 - videoWidth/2
 			 		var top = data.box.top * 2 - videoHeight/2
 			 		var bottom = data.box.bottom * 2 - videoHeight/2
 			 		let box = createbox(left, right, top, bottom);
