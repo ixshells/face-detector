@@ -127,7 +127,7 @@
 					xhr.onload = onload = function(e) {
 					  var arraybuffer = xhr.response; 
 					  var detectedData = JSON.parse(arraybuffer);
-					  if (json.length) {
+					  if (detectedData.length) {
 					  	 drawfaceBoxs(detectedData);
 					  }
 
