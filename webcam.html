@@ -126,9 +126,9 @@
 
 					xhr.onload = onload = function(e) {
 					  var arraybuffer = xhr.response; 
-					  var json = JSON.parse(arraybuffer);
+					  var detectedData = JSON.parse(arraybuffer);
 					  if (json.length) {
-					  	 drawfaceBoxs(json);
+					  	 drawfaceBoxs(detectedData);
 					  }
 
 					}
@@ -137,13 +137,13 @@
 				}, 300)
 			 }
 
-			 function drawfaceBoxs(json) {
+			 function drawfaceBoxs(detectedData) {
 			 	while(faceBoxs.length) {
 			 		let facebox = faceBoxs.pop();
 			 		scene.remove(facebox);
 			 	}
 
-			 	while(json.length) {
+			 	while(detectedData.length) {
 			 		let data = json.pop();
 			 		var left = data.box.left * videoWidth / detectWidth - detectWidth;
 			 		var right = data.box.right * videoWidth / detectWidth - detectWidth;
