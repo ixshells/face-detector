@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>face detect</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #000;
+				color: #fff;
+				margin: 0px;
+				overflow: hidden;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				font-weight: bold;
+				text-align:center;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="info">
+			face detect
+		</div>
+
+		<script src="three.js"></script>
+
+		<video id="video" autoplay style="display:none"></video>
+
+		<script>
+
+			var camera, scene, renderer, video;
+			var videoWidth = 800, videoHeight = 600;
+
+			init();
+			animate();
+			var faceBoxs = new Array();
+
+			function init() {
+
+				camera = orthoCamera();
+
+				scene = new THREE.Scene();
+
+				var texture = textureFromVideo();
+
+				var mesh = videoMesh(texture);
+				
+				scene.add( mesh );
+
+				renderer = glRenderer();
+				
+				document.body.appendChild( renderer.domElement );
+
+				detectFace();
+
+				videoPlayer();
+			 }
+
+			 function glRenderer() {
+			 	var renderer = new THREE.WebGLRenderer( { antialias: true , preserveDrawingBuffer:true} );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( videoWidth, videoHeight );
+				renderer.setClearColor(0xff00ff);
+				return renderer;
+			 }
+
+			 function orthoCamera() {
+			 	var camera = new THREE.OrthographicCamera(-videoWidth/2, videoWidth/2, videoHeight/2, -videoHeight/2, -2, 100);
+                camera.position.set(0, 0, 3);
+                camera.lookAt(new THREE.Vector3(0, 0, 0))
+                return camera;
+			 }
+
+			 function videoMesh(texture) {
+			 	var geometry = new THREE.PlaneGeometry( videoWidth, videoWidth, 1.0 );
+				var material = new THREE.MeshBasicMaterial( { map: texture } );
+
+				var mesh = new THREE.Mesh( geometry, material );
+				return mesh;
+			 }
+
+			 function textureFromVideo() {
+			 	video = document.getElementById( 'video' );
+				var texture = new THREE.VideoTexture( video );
+				texture.minFilter = THREE.LinearFilter;
+				texture.magFilter = THREE.LinearFilter;
+				texture.format = THREE.RGBFormat;
+				return texture;
+			 }
+
+			 function videoPlayer() {
+			 	if ( navigator.mediaDevices && navigator.mediaDevices.getUserMedia ) {
+
+					var constraints = { video: { width: videoWidth, height: videoHeight, facingMode: 'user' } };
+
+					navigator.mediaDevices.getUserMedia( constraints ).then( function( stream ) {
+
+							video.src = window.URL.createObjectURL( stream );
+							video.play();
+
+					} ).catch( function( error ) {
+
+						console.error( 'Unable to access the camera/webcam.', error );
+
+					} );
+
+				} else {
+
+					console.error( 'MediaDevices interface not available.' );
+
+				}
+			 }
+
+			 function detectFace() {
+			 	setInterval(function() {
+					var dataURL = renderer.domElement.toDataURL("image/jpeg", 0.5);
+
+					const xhr = new XMLHttpRequest();
+					req = {'img': dataURL, 'largest_only': false, 'with_people': false}
+					xhr.open('POST', 'http://10.206.8.92:38450/detect', true);
+					xhr.setRequestHeader("content-type", "application/json");
+
+					xhr.onload = onload = function(e) {
+					  var arraybuffer = xhr.response; 
+					  var json = JSON.parse(arraybuffer);
+					  if (json.length) {
+					  	 drawfaceBoxs(json);
+					  }
+
+					}
+					xhr.send(JSON.stringify(req));
+
+				}, 300)
+			 }
+
+			 function drawfaceBoxs(json) {
+			 	while(faceBoxs.length) {
+			 		let facebox = faceBoxs.pop();
+			 		scene.remove(facebox);
+			 	}
+
+			 	while(json.length) {
+			 		let data = json.pop();
+			 		var left = data.box.left * 2 - videoWidth/2
+			 		var right = data.box.left * 2 - videoWidth/2
+			 		var top = data.box.top * 2 - videoHeight/2
+			 		var bottom = data.box.bottom * 2 - videoHeight/2
+			 		let box = createbox(left, right, top, bottom);
+			 		faceBoxs.push(box);
+			 		scene.add(box);
+			 	}
+			 }
+
+			 function createbox(left, right, top, bottom) {
+			 	var box = createLine();
+				box.geometry.vertices.length = 0
+			 	box.geometry.vertices.push(new THREE.Vector3(left, top, 0));
+		        box.geometry.vertices.push(new THREE.Vector3(right, top, 0));
+		        box.geometry.vertices.push(new THREE.Vector3(right, bottom, 0));
+		        box.geometry.vertices.push(new THREE.Vector3(left, bottom, 0));
+		        box.geometry.vertices.push(new THREE.Vector3(left, top, 0));
+		        return box;
+			 }
+
+			 function createLine(){
+		  		let geometry = new THREE.Geometry();
+		        let material = new THREE.LineBasicMaterial({color:0xff0000});
+		        let line = new THREE.Line(geometry,material);
+		        return line;
+			}
+
+
+			 function animate() {
+
+				 requestAnimationFrame( animate );
+
+				 renderer.render( scene, camera );
+			 }
+
+		</script>
+
+	</body>
+</html>
