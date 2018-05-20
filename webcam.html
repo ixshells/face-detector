@@ -31,7 +31,8 @@
 		<script>
 
 			var camera, scene, renderer, video;
-			var videoWidth = 800, videoHeight = 600;
+			var videoWidth = 800.0, videoHeight = 600.0;
+			var detectWidth = 400.0, detectHeight = 300.0;
 			var faceBoxs = new Array();
 
 			init();
@@ -144,10 +145,10 @@
 
 			 	while(json.length) {
 			 		let data = json.pop();
-			 		var left = data.box.left * 2 - videoWidth/2
-			 		var right = data.box.right * 2 - videoWidth/2
-			 		var top = data.box.top * 2 - videoHeight/2
-			 		var bottom = data.box.bottom * 2 - videoHeight/2
+			 		var left = data.box.left * videoWidth / detectWidth - detectWidth;
+			 		var right = data.box.right * videoWidth / detectWidth - detectWidth;
+			 		var top = data.box.top * videoHeight / detectHeight - detectHeight;
+			 		var bottom = data.box.bottom * videoHeight / detectHeight - detectHeight;
 			 		let box = createbox(left, right, top, bottom);
 			 		faceBoxs.push(box);
 			 		scene.add(box);
